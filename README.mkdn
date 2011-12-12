@@ -1,0 +1,117 @@
+# Arquillian demo #
+as presented at JBug Newcastle the 13th December 2011
+
+## Setup
+
+### Get the sources:
+ 1. `git clone git://github.com/Sanne/ArquillianDemo.git`
+ 2. `cd ArquillianDemo`
+ 3. `mvn dependency:go-offline` (optional, but let's start downloading dependencies already)
+
+### Open the project
+Using Eclipse, it's recommended to use the plugin `m2e` to import the Maven project to have it setup all dependencies. All mayor other IDEs have Maven integrations, or you can use the command line instead.
+The git master branch you checked out has some implementations of EJBs, but tests are missing.
+
+## Creating some tests
+
+The project is already setup to use Arquillian and ShrinkWrap in the Maven pom.xml, but the test implementations are missing.
+
+### The Hello World EJB test
+ 1. Locate and open `com.acme.ejb.GreeterTestCase`
+ 2. Add `@RunWith(Arquillian.class)` on the top level type to flag it as an Arquillian test (_org.junit.runner.RunWith_ and _org.jboss.arquillian.junit.Arquillian_)
+ 3. Add a deployment descriptor:
+
+		@Deployment
+		public static JavaArchive createDeployment() {
+			return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(Greeter.class, GreeterBean.class);
+		}
+
+ 4. Have the EJB injected in the test:
+
+		@EJB
+		Greeter greeter;
+
+ 5. Now verify that injection will work, and that the bean behaves as expected:
+
+		@Test
+		public void shouldBeAbleToInjectEJBAndInvoke() throws Exception {
+			String userName = "Earthlings";
+			Assert.assertEquals("Hello, " + userName, greeter.greet(userName));
+		}
+ 
+ 6. Run the test. As any usual JUnit test!
+
+### TemperatureConverterTestCase
+ 1. Locate and open `com.acme.ejb.TemperatureConverterTestCase`
+ 2. Add `@RunWith(Arquillian.class)` on the top level type to flag it as an Arquillian test (_org.junit.runner.RunWith_ and _org.jboss.arquillian.junit.Arquillian_)
+ 3. Add a deployment descriptor:
+
+		@Deployment
+		public static JavaArchive createDeployment() {
+			return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(TemperatureConverter.class, TemperatureConverterBean.class);
+		}
+
+ 4. Have the EJB injected in the test:
+
+		@EJB
+		TemperatureConverter converter;
+
+ 5. Add some tests:
+
+		@Test
+		public void testConvertToCelsius() {
+			assertEquals(converter.convertToCelsius(32d), 0d, 0d);
+			assertEquals(converter.convertToCelsius(212d), 100d, 0d);
+		}
+		
+		@Test
+		public void testConvertToFarenheit() {
+			assertEquals(converter.convertToFarenheit(0d), 32d, 0d);
+			assertEquals(converter.convertToFarenheit(100d), 212d, 0d);
+		}
+		
+		@Test
+		public void testTransactionActive() {
+			assertTrue(converter.isTransactionActive());
+		}
+
+ 6. Run it, again as usual.
+
+### MortgageCalculatorEnvEntryTestCase
+ 1. Locate and open `com.acme.ejb.calc.MortgageCalculatorEnvEntryTestCase`
+ 2. Add `@RunWith(Arquillian.class)` again
+ 3. Add a deployment descriptor, this the we make a *WAR* archive:
+
+		@Deployment
+		public static Archive<?> createDeployment() {
+			// we have to create a war because ejb-jar.xml must be put in WEB-INF
+			return ShrinkWrap.create(WebArchive.class, "test.war")
+					.addClasses(MortgageCalculator.class, MortgageCalculatorBean.class)
+					.addAsWebInfResource("interest-rate-ejb-jar.xml", "ejb-jar.xml");
+		}
+
+ 4. Inject the calculator bean:
+
+		@EJB
+		MortgageCalculator calculator;
+
+ 5. Test that the calculator was configured by our xml configuration file:
+
+		@Test
+		public void shouldCalculateMonthlyPaymentAccuratelyWithBuiltInRate() {
+			Assert.assertEquals("Interest rate should be set by ejb-jar.xml", 5.5, calculator.getCurrentInterestRate());
+			
+			double principal = 750000;
+			int term = 30;
+			BigDecimal expected = new BigDecimal(Double.toString(4258.42));
+			
+			BigDecimal actual = calculator.calculateMonthlyPayment(principal, term);
+			Assert.assertEquals("A banking error has been detected!", expected, actual);
+		}
+
+ 6. Run the tests
+
+### Getting some help
+ - You could have a look into com.acme.ejb.nointerface.NoInterfaceEJBTestCase
+ - `git checkout solution`
+

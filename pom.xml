@@ -18,10 +18,22 @@
    </properties>
 
    <repositories>
-      <repository>
+      <!--<repository>
          <id>jboss-public-repository</id>
          <name>JBoss Repository</name>
          <url>http://repository.jboss.org/nexus/content/groups/public</url>
+         <releases>
+            <updatePolicy>never</updatePolicy>
+         </releases>
+         <snapshots>
+            temporary until we get to Arquillian 1.0.0.Final
+            <enabled>true</enabled>
+         </snapshots>
+      </repository> -->
+      <repository>
+         <id>local-mirror</id>
+         <name>Clone of JBoss Repository</name>
+         <url>http://192.168.1.108/repository</url>
          <releases>
             <updatePolicy>never</updatePolicy>
          </releases>
@@ -33,10 +45,21 @@
    </repositories>
 
    <pluginRepositories>
-      <pluginRepository>
+      <!-- <pluginRepository>
          <id>jboss-public-repository</id>
          <name>JBoss Repository</name>
          <url>http://repository.jboss.org/nexus/content/groups/public</url>
+         <releases>
+            <updatePolicy>never</updatePolicy>
+         </releases>
+         <snapshots>
+            <enabled>false</enabled>
+         </snapshots>
+      </pluginRepository> -->
+      <pluginRepository>
+         <id>local-mirror</id>
+         <name>Clone of JBoss Repository</name>
+         <url>http://192.168.1.108/repository</url>
          <releases>
             <updatePolicy>never</updatePolicy>
          </releases>
